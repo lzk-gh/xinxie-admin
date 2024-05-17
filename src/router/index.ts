@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import SpecificRoutes from './modules/specific';
+import SpecificRoute from './modules/specific';
 import Layout from '@/layout/index.vue';
 
 const routes: Array<RouteRecordRaw> = [
@@ -19,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
     component: Layout,
   },
   // 专用管理
-  ...SpecificRoutes, // 引入专用路由模块
+  ...SpecificRoute, // 引入专用路由模块
   {
     path: '/login',
     name: 'login',

@@ -1,10 +1,10 @@
 /**
  * 专用管理
  */
-import { RouteRecordRaw } from "vue-router";
+import { RouteRecordRaw } from 'vue-router';
 import Layout from '@/layout/index.vue';
 
-const specificRoutes: Array<RouteRecordRaw> = [
+const specificRoute: Array<RouteRecordRaw> = [
   {
     path: '/specific',
     name: 'specific',
@@ -29,4 +29,4 @@ const specificRoutes: Array<RouteRecordRaw> = [
   }
 ];
 
-export default specificRoutes;
+export default specificRoute;
