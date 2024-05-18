@@ -1,7 +1,7 @@
 <template>
-  <div class="flex items-center justify-end px-4 py-3 h-full rounded-xl shadow-lg shadow-gray-200">
+  <div class="flex items-center justify-end px-4 py-3 h-full">
     <div class="flex items-center relative">
-      <div class="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center cursor-pointer" @click="isSun = !isSun">
+      <div class="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center cursor-pointer" @click="handleThemeToggle">
         <svg v-if="!isSun" class="w-5 h-5 transform transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 12 12" to="360 12 12" dur="2s" repeatCount="indefinite" />
@@ -20,7 +20,7 @@
         </svg>
       </div>
       <img src="@/assets/img/productivity-bg-1.webp" alt="Avatar" class="w-8 h-8 rounded-full ml-2 mr-2" />
-      <span class="mr-2 cursor-pointer" @click="showDropdown = !showDropdown">临枫541</span>
+      <span class="mr-2 cursor-pointer" @click="showDropdown = !showDropdown">User</span>
       <el-icon
           class="cursor-pointer transform transition-transform duration-200"
           :class="{ 'rotate-180': showDropdown }"
@@ -75,9 +75,16 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { ArrowDown } from '@element-plus/icons-vue';
+import { useTheme } from "@/hooks/useTheme.ts";
 
 const isSun = ref(false);
 const showDropdown = ref(false);
+const { switchDark } = useTheme();
+
+function handleThemeToggle(e: MouseEvent) {
+  switchDark(e);
+  isSun.value = !isSun.value;
+}
 
 function logout() {
   // 执行退出登录逻辑
