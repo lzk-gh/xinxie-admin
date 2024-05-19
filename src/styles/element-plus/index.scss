@@ -1,4 +1,7 @@
 // 页头
+:root {
+  --el-color-primary: #683dc9 !important;
+}
 .el-header {
   padding: 0;
   border-bottom: 1px solid var(--theme-border-color);

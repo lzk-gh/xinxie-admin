@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-end px-4 py-3 h-full">
+  <div class="flex items-center justify-end px-4 py-3">
     <div class="flex items-center relative">
       <div class="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center cursor-pointer" @click="handleThemeToggle">
         <svg v-if="!isSun" class="w-5 h-5 transform transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -57,14 +57,14 @@
             >
               设置
             </a>
-            <a
+            <div
                 href="#"
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 role="menuitem"
                 @click="logout"
             >
               退出登录
-            </a>
+            </div>
           </div>
         </div>
       </transition>
@@ -76,7 +76,9 @@
 import { ref } from 'vue';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useTheme } from "@/hooks/useTheme.ts";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const isSun = ref(false);
 const showDropdown = ref(false);
 const { switchDark } = useTheme();
@@ -87,7 +89,6 @@ function handleThemeToggle(e: MouseEvent) {
 }
 
 function logout() {
-  // 执行退出登录逻辑
-  console.log('退出登录');
+  router.push('/login');
 }
 </script>
