@@ -12,17 +12,11 @@
       <div class="login-area">
         <div class="title">AIT</div>
         <div class="form-container">
-          <el-form
-            ref="loginFormRef"
-            :model="loginForm"
-            class="demo-ruleForm"
-            label-position="top"
-            @keyup.enter.native="submitLoginForm"
-          >
+          <el-form ref="loginFormRef" :model="loginForm" class="demo-ruleForm" label-position="top" @keyup.enter.native="submitLoginForm">
             <div class="form-input-box">
-              <el-form-item label="账号" prop="userName">
+              <el-form-item label="账号">
                 <el-input
-                  v-model="loginForm.userName"
+                  v-model="loginForm.username"
                   :validate-event="isRigger"
                   autocomplete="off"
                   type="text"
@@ -33,9 +27,9 @@
                   </template>
                 </el-input>
               </el-form-item>
-              <el-form-item label="密码" prop="passWord">
+              <el-form-item label="密码" prop="password">
                 <el-input
-                  v-model="loginForm.passWord"
+                  v-model="loginForm.password"
                   :validate-event="isRigger"
                   autocomplete="off"
                   type="password"
@@ -64,7 +58,7 @@
               {{ isRegister ? '注册' : '登录' }}
             </el-button>
             <div class="text-sm flex justify-between items-center my-2">
-              <el-checkbox v-model="rememberMe">记住我</el-checkbox>
+              <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
               <span v-if="!isRegister">忘记密码?</span>
             </div>
 
@@ -84,119 +78,129 @@
 </template>
 <script lang="ts" setup>
 import Header from '@/layout/components/header/header.vue';
-import { computed, reactive, ref } from 'vue';
-import router from '@/router/index.js';
-// import { postUsersLogin } from '@/api/common/login.js';
-import { ElNotification } from 'element-plus';
+import { onMounted, ref, shallowReactive } from 'vue';
+import CryptoJS from 'crypto-js';
+import { ElMessage, ElLoading } from 'element-plus';
 import { User, Key } from '@element-plus/icons-vue';
 import 'element-plus/dist/index.css';
+import { postLogin, postRegister } from '@/api/common/login.ts';
+import { useRouter } from 'vue-router';
 
-const loginForm = reactive({
-  userName: '',
-  passWord: '',
-  verifyPw: ''
+// 定义用户登录信息接口
+interface LoginInfo {
+  username: string;
+  rememberMe: boolean;
+}
+
+const loginForm = shallowReactive({
+  username: '',
+  password: '',
+  verifyPw: '',
+  rememberMe: false
 });
 
 const isRegister = ref(false);
-
-const rememberMe = ref(false);
-
 const loginFormRef = ref();
-// // 初始化是否触发表单校验
 const isRigger = ref(false);
+const router = useRouter();
+
+onMounted(() => {
+  getLocalLoginInfo();
+});
+
+// 从本地读取用户登录信息
+function getLocalLoginInfo(): void {
+  const loginInfo = localStorage.getItem('login');
+  if (loginInfo) {
+    const { username, rememberMe } = JSON.parse(loginInfo);
+    loginForm.username = username;
+    loginForm.rememberMe = rememberMe;
+  }
+}
+
+// 存储用户登录信息到本地
+function setLocalLoginInfo(): void {
+  if (loginForm.rememberMe) {
+    const loginInfo: LoginInfo = {
+      username: loginForm.username,
+      rememberMe: loginForm.rememberMe
+    };
+    localStorage.setItem('login', JSON.stringify(loginInfo));
+  } else {
+    localStorage.removeItem('login');
+  }
+}
+
+// 显示消息提示
+function showMessage(message: string, type: 'success' | 'error' = 'success') {
+  ElMessage({
+    message,
+    type,
+    plain: true
+  });
+}
+
+// 处理登录逻辑
+function handleLogin(res: any): void {
+  // 存储 token
+  localStorage.setItem('token', res.data.token);
+  // 跳转到首页
+  ElLoading.service({ fullscreen: true });
+  setTimeout(() => {
+    ElLoading.service({ fullscreen: true }).close();
+    router.push('/home');
+  }, 1000);
+}
 
 // 校验登录表单
 function validateForm() {
-  // 判空
-  const exitNullValue = isRegister.value
+  return new Promise((resolve, reject) => {
+    // 判空
+    const exitNullValue = isRegister.value
       ? Object.values(loginForm).some(value => value === '')
       : Object.entries(loginForm).some(([key, value]) => key !== 'verifyPw' && value === '');
-
-  if (exitNullValue) {
-    ElNotification({
-      title: 'Error',
-      message: '请填写完整信息',
-      type: 'error',
-      duration: 2000 // 显示时长
-    });
-    return false;
-  }
-
-  // 密码二次输入不一
-  const verifyPwValue = loginForm.passWord !== loginForm.verifyPw;
-  if (verifyPwValue && isRegister.value) {
-    ElNotification({
-      title: 'Error',
-      message: '两次密码输入不一致',
-      type: 'error',
-      duration: 2000 // 显示时长
-    });
-    return false;
-  }
-
-  return true;
+    if (exitNullValue) {
+      showMessage('请填写完整信息', 'error');
+      reject(new Error('请填写完整信息'));
+      return;
+    }
+    // 密码二次输入不一
+    const verifyPwValue = loginForm.password !== loginForm.verifyPw;
+    if (verifyPwValue && isRegister.value) {
+      showMessage('两次密码输入不一致', 'error');
+      reject(new Error('两次密码输入不一致'));
+      return;
+    }
+    resolve();
+  });
 }
 
+// 提交登录/注册表单
 function submitLoginForm() {
-  if (!validateForm()) return;
-  console.log(rememberMe.value)
-
-  loginFormRef.value.resetFields();
+  validateForm()
+    .then(() => {
+      const { username, password } = loginForm;
+      const encryptedPw = CryptoJS.AES.encrypt(password, 'xinxie-login').toString();
+      const loginCall = isRegister.value ? postRegister : postLogin;
+      loginCall({ username, password: encryptedPw })
+        .then(res => {
+          if (!isRegister.value) {
+            handleLogin(res);
+          } else {
+            isRegister.value = false;
+          }
+          setLocalLoginInfo();
+          showMessage(res.data.message, 'success');
+          loginFormRef.value.resetFields();
+        })
+        .catch(err => {
+          showMessage(err.response.data.message, 'error');
+        });
+    })
+    .catch(err => {
+      console.error(err);
+    });
 }
-
-// 校验登录表单
-// function validateFrom() {
-//   return new Promise((resolve, reject) => {
-//     loginFormRef.value.validate(async valid => {
-//       if (valid) {
-//         const { userName, passWord } = loginForm;
-//         if (!userName) {
-//           ElNotification({
-//             title: 'Error',
-//             message: '账号或密码错误',
-//             type: 'error',
-//             duration: 3000 // 显示时长
-//           });
-//           reject(new Error('表单项校验失败'));
-//         } else {
-//           resolve();
-//         }
-//       } else {
-//         reject(new Error('表单项校验失败'));
-//       }
-//     });
-//   });
-// }
-//
-// // 提交登录表单
-// async function submitLoginForm() {
-//   isRigger.value = true;
-//   const { userName, passWord } = loginForm;
-//   try {
-//     await validateFrom();
-//     try {
-//       // await postUsersLogin({ username: userName, password: passWord });
-//       ElNotification({
-//         title: 'Success',
-//         message: '登录成功',
-//         type: 'success',
-//         duration: 2000 // 显示时长
-//       });
-//       // 登录成功跳转首页
-//       await router.push('/home');
-//     } catch (error) {
-//       ElNotification({
-//         title: 'Error',
-//         message: '账号或密码错误',
-//         type: 'error',
-//         duration: 3000 // 显示时长
-//       });
-//       loginFormRef.value.resetFields(); // 清空表单
-//     }
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
 </script>
 
 <style lang="scss" scoped>

@@ -65,7 +65,7 @@ export const useTheme = (): ThemeHook => {
    */
   const initTheme = () => {
     docElement.classList.toggle('dark', isDark.value);
-  };
+  }
 
   return { initTheme, switchDark };
 };

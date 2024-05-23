@@ -1,5 +1,8 @@
 // 全局默认配置
 
+// 接口
+export const DEV_BASE_API_URL = 'http://localhost:3000';
+
 // 首页地址（默认）
 export const HOME_URL = '/home/index';
 

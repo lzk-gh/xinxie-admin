@@ -1,12 +1,41 @@
 <template>
   <div class="flex items-center justify-end px-4 py-3">
     <div class="flex items-center relative">
-      <div class="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center cursor-pointer" @click="handleThemeToggle">
-        <svg v-if="!isSun" class="w-5 h-5 transform transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div
+        class="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center cursor-pointer"
+        @click="handleThemeToggle"
+      >
+        <svg
+          v-if="!isSun"
+          class="w-5 h-5 transform transition-transform duration-300 hover:scale-110"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#475569"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 12 12" to="360 12 12" dur="2s" repeatCount="indefinite" />
+          <animateTransform
+            attributeName="transform"
+            attributeType="XML"
+            type="rotate"
+            from="0 12 12"
+            to="360 12 12"
+            dur="2s"
+            repeatCount="indefinite"
+          />
         </svg>
-        <svg v-else class="w-5 h-5 transform transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="#475569" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          v-else
+          class="w-5 h-5 transform transition-transform duration-300 hover:scale-110"
+          viewBox="0 0 24 24"
+          fill="#475569"
+          stroke="#475569"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="12" cy="12" r="5" />
           <line x1="12" y1="1" x2="12" y2="3" />
           <line x1="12" y1="21" x2="12" y2="23" />
@@ -22,46 +51,45 @@
       <img src="@/assets/img/productivity-bg-1.webp" alt="Avatar" class="w-8 h-8 rounded-full ml-2 mr-2" />
       <span class="mr-2 cursor-pointer" @click="showDropdown = !showDropdown">User</span>
       <el-icon
-          class="cursor-pointer transform transition-transform duration-200"
-          :class="{ 'rotate-180': showDropdown }"
-          @click="showDropdown = !showDropdown"
+        class="cursor-pointer transform transition-transform duration-200"
+        :class="{ 'rotate-180': showDropdown }"
+        @click="showDropdown = !showDropdown"
       >
         <ArrowDown />
       </el-icon>
       <transition
-          enter-active-class="transition ease-out duration-200"
-          enter-from-class="transform opacity-0 scale-95"
-          enter-to-class="transform opacity-100 scale-100"
-          leave-active-class="transition ease-in duration-75"
-          leave-from-class="transform opacity-100 scale-100"
-          leave-to-class="transform opacity-0 scale-95"
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="transform opacity-0 scale-95"
+        enter-to-class="transform opacity-100 scale-100"
+        leave-active-class="transition ease-in duration-75"
+        leave-from-class="transform opacity-100 scale-100"
+        leave-to-class="transform opacity-0 scale-95"
       >
         <div
-            v-if="showDropdown"
-            class="absolute right-0 top-12 w-48 rounded-md shadow-lg bg-white ring-1 ring-gray-200"
-            @mouseover="showDropdown = true"
-            @mouseleave="showDropdown = false"
+          v-if="showDropdown"
+          class="absolute right-0 top-12 w-48 rounded-md shadow-lg bg-white ring-1 ring-gray-200"
+          @mouseover="showDropdown = true"
+          @mouseleave="showDropdown = false"
         >
           <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
             <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                role="menuitem"
+              href="#"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              role="menuitem"
             >
               我的资料
             </a>
             <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                role="menuitem"
+              href="#"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              role="menuitem"
             >
               设置
             </a>
             <div
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                role="menuitem"
-                @click="logout"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              role="menuitem"
+              @click="logout"
             >
               退出登录
             </div>
@@ -73,10 +101,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { ArrowDown } from '@element-plus/icons-vue';
-import { useTheme } from "@/hooks/useTheme.ts";
-import { useRouter } from "vue-router";
+import { useTheme } from '@/hooks/useTheme.ts';
+import { useRouter } from 'vue-router';
+import { ElLoading } from 'element-plus';
+import 'element-plus/theme-chalk/el-loading.css';
 
 const router = useRouter();
 const isSun = ref(false);
@@ -89,6 +119,12 @@ function handleThemeToggle(e: MouseEvent) {
 }
 
 function logout() {
-  router.push('/login');
+  nextTick(() => {
+    const loading = ElLoading.service({ fullscreen: true });
+    setTimeout(() => {
+      loading.close();
+      router.push('/login');
+    }, 1000);
+  })
 }
 </script>

@@ -25,7 +25,8 @@
       "@/*": ["./src/*"],
       "@/components/*": ["./src/components"],
       "@/assets/*": ["./src/assets/*"]
-    }
+    },
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
