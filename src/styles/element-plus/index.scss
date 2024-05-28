@@ -1,6 +1,8 @@
 // 页头
-:root {
+:root:root {
   --el-color-primary: #683dc9 !important;
+  --el-bg-color-overlay: var(--theme-header-bg-color);
+  --el-bg-color: var(--theme-header-bg-color);
 }
 .el-header {
   padding: 0;
@@ -21,4 +23,9 @@
 
 .el-menu {
   border: none !important;
+}
+
+// dialog 弹窗
+.el-dialog  {
+  padding: 18px 26px !important;
 }
