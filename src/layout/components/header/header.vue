@@ -49,7 +49,7 @@
         </svg>
       </div>
       <img src="@/assets/img/productivity-bg-1.webp" alt="Avatar" class="w-8 h-8 rounded-full ml-2 mr-2" />
-      <span class="mr-2 cursor-pointer" @click="showDropdown = !showDropdown">User</span>
+      <span class="mr-2 cursor-pointer" @click="showDropdown = !showDropdown">{{ username }}</span>
       <el-icon
         class="cursor-pointer transform transition-transform duration-200"
         :class="{ 'rotate-180': showDropdown }"
@@ -101,7 +101,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useTheme } from '@/hooks/useTheme.ts';
 import { useRouter } from 'vue-router';
@@ -113,18 +113,27 @@ const isSun = ref(false);
 const showDropdown = ref(false);
 const { switchDark } = useTheme();
 
+const username = ref('User');
+
+onMounted(() => {
+  const login = localStorage.getItem('login');
+  if (login) {
+    username.value = JSON.parse(login).username;
+  }
+})
+
 function handleThemeToggle(e: MouseEvent) {
   switchDark(e);
   isSun.value = !isSun.value;
 }
 
 function logout() {
-  nextTick(() => {
-    const loading = ElLoading.service({ fullscreen: true });
-    setTimeout(() => {
-      loading.close();
-      router.push('/login');
-    }, 1000);
-  })
+  const loading = ElLoading.service({ fullscreen: true });
+  localStorage.removeItem('token');
+  localStorage.removeItem('login');
+  setTimeout(() => {
+    loading.close();
+    router.push('/login');
+  }, 1000);
 }
 </script>
