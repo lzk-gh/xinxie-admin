@@ -12,19 +12,15 @@ const specificRoute: Array<RouteRecordRaw> = [
 
     children: [
       {
-        path: '',
-        component: () => import('@/views/specific/specific.vue')
+        path: '/specific_docs',
+        name: 'specific_docs',
+        component: () => import('@/views/specific/components/specific-docs.vue'),
+      },
+      {
+        path: '/specific_tools',
+        name: 'specific_tools',
+        component: () => import('@/views/specific/components/specific-tools.vue'),
       }
-      // {
-      //   path: '/specific_docs',
-      //   name: 'specific_docs',
-      //   component: () => import('@/views/specific/specific-docs.vue'),
-      // },
-      // {
-      //   path: '/specific_tools',
-      //   name: 'specific_tools',
-      //   component: () => import('@/views/specific/specific-tools.vue'),
-      // }
     ]
   }
 ];

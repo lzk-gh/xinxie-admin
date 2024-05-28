@@ -1,6 +1,6 @@
 <template>
   <div class="specific">
-    文档
+    <router-view />
   </div>
 </template>
 
@@ -8,5 +8,9 @@
 </script>
 
 <style scoped>
-
+.specific {
+  overflow: hidden;
+  width: 100%;
+  background-color: red !important;
+}
 </style>
