@@ -16,7 +16,8 @@
           <el-icon><Edit /></el-icon>
           <span>成员管理</span>
         </template>
-        <el-menu-item index="member">加入我们</el-menu-item>
+        <el-menu-item index="member_cadre">现任干部</el-menu-item>
+        <el-menu-item index="member_join">加入我们</el-menu-item>
       </el-sub-menu>
       <el-sub-menu index="2">
         <template #title>

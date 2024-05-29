@@ -23,6 +23,8 @@ import Sidebar from '@/layout/components/sidebar/sidebar.vue';
 
 <style lang="scss" scoped>
 .main-content {
+  height: calc(100vh - 60px);
   padding: 20px;
+  overflow-y: scroll;
 }
 </style>

@@ -12,6 +12,7 @@
 
 // 主体区域
 .el-main {
+  overflow: hidden;
   padding: 0 !important;
   background-color: var(--theme-main-bg-color);
 }

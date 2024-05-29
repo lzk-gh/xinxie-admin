@@ -7,6 +7,7 @@ import {
 } from 'vue-router';
 import SpecificRoute from './modules/specific';
 import Layout from '@/layout/index.vue';
+import memberRoute from "@/router/modules/member.ts";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -19,11 +20,7 @@ const routes: Array<RouteRecordRaw> = [
     component: Layout
   },
   // 成员管理
-  {
-    path: '/member',
-    name: 'member',
-    component: Layout
-  },
+  ...memberRoute,
   // 专用管理
   ...SpecificRoute, // 引入专用路由模块
   {
