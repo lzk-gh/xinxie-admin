@@ -38,19 +38,6 @@
               信息学院
             </div>
           </div>
-
-          <!--<div class="flex gap-4 mt-6">-->
-          <!--  <el-button-->
-          <!--      class="border border-blue-500 text-blue-500 font-medium py-2 px-4 rounded-lg hover:bg-blue-100"-->
-          <!--  >-->
-          <!--    编辑-->
-          <!--  </el-button>-->
-          <!--  <el-button-->
-          <!--      class="border border-red-500 text-red-500 font-medium py-2 px-4 rounded-lg hover:bg-red-100"-->
-          <!--  >-->
-          <!--    删除-->
-          <!--  </el-button>-->
-          <!--</div>-->
         </div>
       </div>
     </div>
