@@ -19,11 +19,30 @@
           </el-select>
         </el-form-item>
       </template>
+
+      <el-form-item :label="searchDisposition.label">
+        <el-input
+          v-model="searchValue"
+          :placeholder="searchDisposition.placeholder"
+          @keyup.enter="onSearch"
+        >
+          <template #append>
+            <el-button @click="onSearch">
+              <template #icon>
+                <Search />
+              </template>
+            </el-button>
+          </template>
+        </el-input>
+      </el-form-item>
     </el-form>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { Search } from '@element-plus/icons-vue';
+import { ref } from 'vue';
+
 defineProps<{
   selectOptions: {
     id: number;
@@ -33,5 +52,18 @@ defineProps<{
     placeholder: string;
     options: { label: string; value: string }[];
   }[];
+  searchDisposition: {
+    label: string;
+    placeholder: string;
+  };
 }>();
+
+const searchValue = ref('');
+
+const emit = defineEmits(['on-search']);
+
+function onSearch() {
+  if (!searchValue.value) return;
+  emit('on-search', searchValue.value);
+}
 </script>

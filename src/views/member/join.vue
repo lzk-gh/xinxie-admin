@@ -1,24 +1,28 @@
 <template>
   <div class="join">
-    <TableFilter :select-options="selectOptions" />
+    <TableFilter
+      :select-options="selectOptions"
+      :search-disposition="searchDisposition"
+      @on-search="onSearch"
+    />
 
     <el-table
-        :data="filteredTableData"
-        stripe
-        border
-        @selection-change="selectedRows = $event"
+      :data="filteredTableData"
+      stripe
+      border
+      @selection-change="selectedRows = $event"
     >
       <el-table-column type="index" width="50" align="center" />
       <el-table-column
-          type="selection"
-          width="55"
-          align="center"
-          :selectable="row => row.status === 0"
+        type="selection"
+        width="55"
+        align="center"
+        :selectable="row => row.status === 0"
       />
       <el-table-column prop="name" label="姓名" />
       <el-table-column prop="studentId" label="学号" />
       <el-table-column prop="studentId" label="邮箱" />
-      <el-table-column prop="major" label="专业" />
+      <el-table-column prop="profession" label="专业" />
       <el-table-column prop="department" label="意愿部门" />
       <el-table-column prop="reason" width="200" label="申请原因" />
       <el-table-column prop="status" label="是否通过">
@@ -31,17 +35,17 @@
       <el-table-column label="操作" width="180">
         <template #default="scope">
           <el-button
-              size="small"
-              @click="handleApprove"
-              :disabled="disabledBtnStatus(scope.row)"
+            size="small"
+            @click="handleApprove"
+            :disabled="disabledBtnStatus(scope.row)"
           >
             批准
           </el-button>
           <el-button
-              size="small"
-              type="danger"
-              @click="handleReject(scope.row.id)"
-              :disabled="disabledBtnStatus(scope.row)"
+            size="small"
+            type="danger"
+            @click="handleReject(scope.row.id)"
+            :disabled="disabledBtnStatus(scope.row)"
           >
             拒绝
           </el-button>
@@ -54,10 +58,10 @@
         <li v-for="row in selectedRows" :key="row.id">
           {{ row.name }} - {{ row.studentId }}
           <el-progress
-              class="my-4"
-              :percentage="percentage"
-              :show-text="true"
-              :duration="8"
+            class="my-4"
+            :percentage="percentage"
+            :show-text="true"
+            :duration="8"
           />
         </li>
       </ul>
@@ -75,8 +79,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import TableFilter from '@/components/table-filter/table-filter.vue';
+import { getAllJoinList, getOneJoin } from '@/api/app/join.ts';
 
 interface TableData {
   id: number;
@@ -123,8 +128,9 @@ const selectOptions = reactive<SelectOptions[]>([
     placeholder: '请选择部门',
     options: [
       { label: '技术部', value: '技术部' },
-      { label: '产品部', value: '产品部' },
-      { label: '设计部', value: '设计部' }
+      { label: '宣策部', value: '宣策部' },
+      { label: '外联部', value: '外联部' },
+      { label: '秘书部', value: '秘书部' }
     ]
   },
   {
@@ -140,45 +146,29 @@ const selectOptions = reactive<SelectOptions[]>([
   }
 ]);
 
-const tableData = ref<TableData[]>([
-  {
-    id: 1,
-    name: '张三',
-    studentId: '2021001',
-    major: '计算机科学与技术',
-    department: '技术部',
-    reason: '希望提升技术能力',
-    status: 0
-  },
-  {
-    id: 2,
-    name: '李四',
-    studentId: '2021002',
-    major: '软件工程',
-    department: '产品部',
-    reason: '对产品设计感兴趣',
-    status: 1
-  },
-  {
-    id: 3,
-    name: '李四',
-    studentId: '2021002',
-    major: '软件工程',
-    department: '产品部',
-    reason: '对产品设计感兴趣',
-    status: 2
-  },
-  {
-    id: 4,
-    name: '李四',
-    studentId: '2021002',
-    major: '软件工程',
-    department: '产品部',
-    reason: '对产品设计感兴趣',
-    status: 0
-  }
-]);
+const searchDisposition = {
+  label: '搜索姓名',
+  placeholder: '请输入姓名'
+};
 
+const tableData = reactive<TableData[]>([]);
+
+onMounted(() => {
+  fetchJoinList();
+});
+
+async function onSearch(value: string) {
+  await getOneJoin(value).then(res => {
+    tableData.splice(0, tableData.length, res.data);
+  });
+}
+
+// 获取申请列表
+async function fetchJoinList() {
+  await getAllJoinList().then(res => {
+    tableData.splice(0, tableData.length, ...res.data);
+  });
+}
 
 // 控制按钮是否禁用
 const disabledBtnStatus = computed(() => (row: TableData) => {
@@ -192,7 +182,7 @@ const disabledBtnStatus = computed(() => (row: TableData) => {
 const filteredTableData = computed(() => {
   const department = selectOptions[0].selectedValue;
   const status = selectOptions[1].selectedValue;
-  return tableData.value.filter(item => {
+  return tableData.filter(item => {
     const departmentMatch = !department || item.department === department;
     const statusMatch = item.status === (status ?? item.status);
     return departmentMatch && statusMatch;
