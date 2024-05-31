@@ -12,7 +12,13 @@
       <div class="login-area">
         <div class="title">AIT</div>
         <div class="form-container">
-          <el-form ref="loginFormRef" :model="loginForm" class="demo-ruleForm" label-position="top" @keyup.enter.native="submitLoginForm">
+          <el-form
+            ref="loginFormRef"
+            :model="loginForm"
+            class="demo-ruleForm"
+            label-position="top"
+            @keyup.enter.native="submitLoginForm"
+          >
             <div class="form-input-box">
               <el-form-item label="账号">
                 <el-input
@@ -64,11 +70,15 @@
 
             <div v-if="!isRegister" class="login-form-footer">
               <span>还没有账号?</span>
-              <span class="footer-register" @click="isRegister = !isRegister">立即注册</span>
+              <span class="footer-register" @click="isRegister = !isRegister">
+                立即注册
+              </span>
             </div>
             <div v-else class="login-form-footer">
               <span>已有账号?</span>
-              <span class="footer-register" @click="isRegister = !isRegister">立即登录</span>
+              <span class="footer-register" @click="isRegister = !isRegister">
+                立即登录
+              </span>
             </div>
           </el-form>
         </div>
@@ -80,11 +90,12 @@
 import Header from '@/layout/components/header/header.vue';
 import { onMounted, ref, shallowReactive } from 'vue';
 import CryptoJS from 'crypto-js';
-import { ElMessage, ElLoading } from 'element-plus';
+import { ElLoading } from 'element-plus';
 import { User, Key } from '@element-plus/icons-vue';
 import 'element-plus/dist/index.css';
 import { postLogin, postRegister } from '@/api/common/login.ts';
 import { useRouter } from 'vue-router';
+import { useMessage } from '@/hooks/useMessage.ts';
 
 // 定义用户登录信息接口
 interface LoginInfo {
@@ -99,6 +110,7 @@ const loginForm = shallowReactive({
   rememberMe: false
 });
 
+const { showMessage } = useMessage();
 const isRegister = ref(false);
 const loginFormRef = ref();
 const isRigger = ref(false);
@@ -131,15 +143,6 @@ function setLocalLoginInfo(): void {
   }
 }
 
-// 显示消息提示
-function showMessage(message: string, type: 'success' | 'error' = 'success') {
-  ElMessage({
-    message,
-    type,
-    plain: true
-  });
-}
-
 // 处理登录逻辑
 function handleLogin(res: any): void {
   // 存储 token
@@ -158,7 +161,9 @@ function validateForm() {
     // 判空
     const exitNullValue = isRegister.value
       ? Object.values(loginForm).some(value => value === '')
-      : Object.entries(loginForm).some(([key, value]) => key !== 'verifyPw' && value === '');
+      : Object.entries(loginForm).some(
+          ([key, value]) => key !== 'verifyPw' && value === ''
+        );
     if (exitNullValue) {
       showMessage('请填写完整信息', 'error');
       reject(new Error('请填写完整信息'));
@@ -180,7 +185,10 @@ function submitLoginForm() {
   validateForm()
     .then(() => {
       const { username, password } = loginForm;
-      const encryptedPw = CryptoJS.AES.encrypt(password, 'xinxie-login').toString();
+      const encryptedPw = CryptoJS.AES.encrypt(
+        password,
+        'xinxie-login'
+      ).toString();
       const loginCall = isRegister.value ? postRegister : postLogin;
       loginCall({ username, password: encryptedPw })
         .then(res => {
@@ -209,16 +217,16 @@ function submitLoginForm() {
   flex-direction: column;
   width: 100vw;
   height: 100vh;
-  position: relative; // 添加相对定位
+  position: relative;
 
   .floating-image {
     position: absolute;
     left: 0;
-    bottom: 0%;
-    width: 300px; // 设置图片宽度
-    height: 140px; // 设置图片高度
+    bottom: 0;
+    width: 300px;
+    height: 140px;
     animation: float 6s ease-in-out infinite;
-    z-index: -1; // 确保图片在 content 下面
+    z-index: -1;
   }
 
   @keyframes float {
@@ -249,14 +257,12 @@ function submitLoginForm() {
 
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
     border-radius: 12px;
-    backdrop-filter: blur(5px); /* 添加高斯模糊 */
-    //background-color: rgba(255, 255, 255, 0.5); /* 添加半透明背景 */
-    z-index: 2; // 确保 content 在图片上面
+    backdrop-filter: blur(5px);
+    z-index: 2;
 
     .login-inner {
       display: flex;
       align-items: center;
-      //position: absolute;
       width: 50%;
       height: 100%;
       z-index: -1;
@@ -267,15 +273,6 @@ function submitLoginForm() {
         height: 100%;
         object-fit: cover;
       }
-
-      //@keyframes breath {
-      //  0% {
-      //    filter: hue-rotate(0deg);
-      //  }
-      //  100% {
-      //    filter: hue-rotate(360deg);
-      //  }
-      //}
     }
 
     .login-area {
@@ -317,19 +314,19 @@ function submitLoginForm() {
           content: '';
           position: absolute;
           top: 0;
-          left: -100%; /* 初始位置在按钮左侧 */
+          left: -100%;
           width: 100%;
           height: 100%;
           background-color: #ffffff;
           opacity: 0;
-          transform: skewX(-30deg); /* 添加倾斜效果 */
+          transform: skewX(-30deg);
           transition:
             left 0.5s ease,
-            opacity 0.5s ease; /* 添加过渡效果 */
+            opacity 0.5s ease;
         }
 
         .sub-btn:hover::before {
-          left: 120%; /* 鼠标移入时，将闪光元素移动到按钮右侧 */
+          left: 120%;
           opacity: 1;
         }
 

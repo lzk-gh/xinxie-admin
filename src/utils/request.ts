@@ -32,10 +32,10 @@ service.interceptors.response.use(
     if (error.response) {
       const errorMessage =
         (error.response.data as { message: string }).message || '出错啦~';
-      showMessage({ message: errorMessage, type: 'error' });
+      showMessage(errorMessage, 'error' );
       return Promise.reject(error);
     } else {
-      showMessage({ message: '网络加载失败', type: 'error' });
+      showMessage('网络加载失败', 'error' );
       return Promise.reject(error);
     }
   }
