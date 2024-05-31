@@ -1,4 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import 'element-plus/dist/index.css';
+import { useMessage } from '@/hooks/useMessage.ts';
+const { showMessage } = useMessage();
 
 const service: AxiosInstance = axios.create({
   timeout: 120000
@@ -23,18 +26,27 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
   response => {
-    if (!/^2\d{2}$/.test(response.status.toString())) {
-      return Promise.reject(new Error(response.data.message || 'Error'));
-    }
     return response;
   },
   (error: AxiosError) => {
-    return Promise.reject(error);
+    if (error.response) {
+      const errorMessage =
+        (error.response.data as { message: string }).message || '出错啦~';
+      showMessage({ message: errorMessage, type: 'error' });
+      return Promise.reject(error);
+    } else {
+      showMessage({ message: '网络加载失败', type: 'error' });
+      return Promise.reject(error);
+    }
   }
 );
 
 // Record<string, any> 用于描述一个对象，其中所有的键都是字符串类型，所有的值可以是任何类型
-export const get: RequestFunction = (host: string, url: string, params?: Record<string, any>) => {
+export const get: RequestFunction = (
+  host: string,
+  url: string,
+  params?: Record<string, any>
+) => {
   return service({
     url: host + url,
     method: 'get',
@@ -42,7 +54,11 @@ export const get: RequestFunction = (host: string, url: string, params?: Record<
   });
 };
 
-export const post: RequestFunction = (host: string, url: string, data?: any) => {
+export const post: RequestFunction = (
+  host: string,
+  url: string,
+  data?: any
+) => {
   return service({
     url: host + url,
     method: 'post',
