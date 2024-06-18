@@ -1,31 +1,31 @@
 <template>
   <div class="join">
     <TableFilter
-      :select-options="selectOptions"
       :search-disposition="searchDisposition"
+      :select-options="selectOptions"
       @on-search="onSearch"
     />
 
     <el-table
       :data="filteredTableData"
-      stripe
       border
+      stripe
       @selection-change="selectedRows = $event"
     >
-      <el-table-column type="index" width="50" align="center" />
+      <el-table-column align="center" type="index" width="50" />
       <el-table-column
+        :selectable="row => row.status === 0"
+        align="center"
         type="selection"
         width="55"
-        align="center"
-        :selectable="row => row.status === 0"
       />
-      <el-table-column prop="name" label="姓名" />
-      <el-table-column prop="studentId" label="学号" />
-      <el-table-column prop="studentId" label="邮箱" />
-      <el-table-column prop="profession" label="专业" />
-      <el-table-column prop="department" label="意愿部门" />
-      <el-table-column prop="reason" width="200" label="申请原因" />
-      <el-table-column prop="status" label="是否通过">
+      <el-table-column label="姓名" prop="name" />
+      <el-table-column label="学号" prop="studentId" />
+      <el-table-column label="邮箱" prop="email" />
+      <el-table-column label="专业" prop="profession" />
+      <el-table-column label="意愿部门" prop="department" />
+      <el-table-column label="申请原因" prop="reason" width="200" />
+      <el-table-column label="是否通过" prop="status">
         <template #default="scope">
           <el-tag :type="getStatusTagType(scope.row.status)">
             {{ getStatusLabel(scope.row.status) }}
@@ -35,17 +35,17 @@
       <el-table-column label="操作" width="180">
         <template #default="scope">
           <el-button
-            size="small"
-            @click="handleApprove"
             :disabled="disabledBtnStatus(scope.row)"
+            size="small"
+            @click="handleEmailSend(true)"
           >
             批准
           </el-button>
           <el-button
+            :disabled="disabledBtnStatus(scope.row)"
             size="small"
             type="danger"
-            @click="handleReject(scope.row.id)"
-            :disabled="disabledBtnStatus(scope.row)"
+            @click="handleEmailSend(false)"
           >
             拒绝
           </el-button>
@@ -55,13 +55,13 @@
 
     <el-dialog v-model="showApproveDialog" title="发送邮箱通知" width="30%">
       <ul>
-        <li v-for="row in selectedRows" :key="row.id">
+        <li v-for="(row, index) in selectedRows" :key="row.id">
           {{ row.name }} - {{ row.studentId }}
           <el-progress
-            class="my-4"
-            :percentage="percentage"
-            :show-text="true"
             :duration="8"
+            :percentage="emailProgress[index] || 0"
+            :show-text="true"
+            class="my-4"
           />
         </li>
       </ul>
@@ -69,7 +69,7 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showApproveDialog = false">取消</el-button>
-          <el-button type="primary" @click="handleConfirm" :loading="loading">
+          <el-button :loading="loading" type="primary" @click="handleConfirm">
             确认
           </el-button>
         </span>
@@ -81,12 +81,20 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import TableFilter from '@/components/table-filter/table-filter.vue';
-import { getAllJoinList, getOneJoin } from '@/api/app/join.ts';
+import {
+  fetchInterviewResults,
+  getAllJoinList,
+  getOneJoin,
+  updateJoinStatus
+} from '@/api/app/join.ts';
+import { DEV_BASE_API_URL } from '@/config';
+import { useMessage } from '@/hooks/useMessage.ts';
 
 interface TableData {
   id: number;
   name: string;
   studentId: string;
+  email: string;
   major: string;
   department: string;
   reason: string;
@@ -106,20 +114,26 @@ interface SelectOptions {
   options: SelectOption[];
 }
 
+type EmailEventHandle = (data: {
+  emailProgress: number[];
+  successfulIds: number[];
+  eventSource: EventSource;
+  loading: any;
+  type: string;
+  emailIndexMap: Map<any, number>;
+  handleEvent(event: MessageEvent): void;
+  onComplete(handle?: EmailEventHandle): void;
+}) => void;
+
+const { showMessage } = useMessage();
+
+const isPassed = ref();
 const showApproveDialog = ref(false);
-const percentage = ref(0);
 const loading = ref(false);
-const indeterminate = ref(true);
 const selectedRows = ref<TableData[]>([]);
-// const stillProgress = ref({
-//   currentIndex: 0,
-//   value: 0
-// }); // 进度条-止水阀
 
-/**
- * 点击批准按钮
- */
-
+const tableData = reactive<TableData[]>([]);
+const emailProgress = reactive<number[]>([]);
 const selectOptions = reactive<SelectOptions[]>([
   {
     id: 1,
@@ -149,81 +163,6 @@ const selectOptions = reactive<SelectOptions[]>([
 const searchDisposition = {
   label: '搜索姓名',
   placeholder: '请输入姓名'
-};
-
-const tableData = reactive<TableData[]>([]);
-
-onMounted(() => {
-  fetchJoinList();
-});
-
-async function onSearch(value: string) {
-  await getOneJoin(value).then(res => {
-    tableData.splice(0, tableData.length, res.data);
-  });
-}
-
-// 获取申请列表
-async function fetchJoinList() {
-  await getAllJoinList().then(res => {
-    tableData.splice(0, tableData.length, ...res.data);
-  });
-}
-
-// 控制按钮是否禁用
-const disabledBtnStatus = computed(() => (row: TableData) => {
-  return row.status !== 0 || !selectedRows.value.includes(row);
-});
-
-/**
- * 筛选过滤后的表格数据
- * @returns {TableData[]}
- */
-const filteredTableData = computed(() => {
-  const department = selectOptions[0].selectedValue;
-  const status = selectOptions[1].selectedValue;
-  return tableData.filter(item => {
-    const departmentMatch = !department || item.department === department;
-    const statusMatch = item.status === (status ?? item.status);
-    return departmentMatch && statusMatch;
-  });
-});
-
-/**
- * 确认批准
- */
-async function handleConfirm() {
-  loading.value = true;
-  indeterminate.value = false;
-
-  // 模拟进度条加载
-  const timer = setInterval(() => {
-    percentage.value += 10;
-    if (percentage.value >= 100) {
-      clearInterval(timer);
-      setTimeout(() => {
-        loading.value = false;
-        showApproveDialog.value = false;
-        percentage.value = 0;
-        selectedRows.value.forEach(row => {
-          console.log(`批准 ${row.name} - ${row.studentId}`);
-        });
-      }, 500);
-    }
-  }, 50);
-}
-
-// 批准申请
-function handleApprove() {
-  showApproveDialog.value = true;
-  percentage.value = 0;
-  loading.value = false;
-  indeterminate.value = true;
-}
-
-// 拒绝申请
-function handleReject(id: number) {
-  console.log('拒绝申请', id);
 }
 
 const getStatusLabel = status => {
@@ -249,6 +188,133 @@ const getStatusTagType = status => {
       return 'danger';
   }
 };
+
+onMounted(() => {
+  fetchJoinList();
+});
+
+// 搜索成员
+async function onSearch(value: string) {
+  await getOneJoin(value).then(res => {
+    tableData.splice(0, tableData.length, res.data);
+  });
+}
+
+// 获取申请列表
+async function fetchJoinList() {
+  await getAllJoinList().then(res => {
+    tableData.splice(0, tableData.length, ...res.data);
+  });
+}
+
+// 控制按钮是否禁用
+const disabledBtnStatus = computed(() => (row: TableData) => {
+  return row.status !== 0 || !selectedRows.value.includes(row);
+});
+
+// 筛选过滤后的表格数据
+const filteredTableData = computed(() => {
+  const department = selectOptions[0].selectedValue;
+  const status = selectOptions[1].selectedValue;
+  return tableData.filter(item => {
+    const departmentMatch = !department || item.department === department;
+    const statusMatch = item.status === (status ?? item.status);
+    return departmentMatch && statusMatch;
+  });
+});
+
+// 显示邮件弹框
+function handleEmailSend(isPassedStatus: boolean) {
+  isPassed.value = isPassedStatus;
+  showApproveDialog.value = true;
+}
+
+class EmailEventProcessor {
+  public successfulIds: number[] = [];
+  private eventSource: EventSource;
+  private emailIndexMap: Map<any, number>;
+  private readonly onCompletePromise: Promise<void>;
+  private resolveComplete: (value: PromiseLike<void> | void) => void = null;
+
+  constructor(
+    private emailProgress: number[],
+    mailerDto: any[],
+    private loading: any
+  ) {
+    this.emailIndexMap = new Map(
+      mailerDto.map((item: any, index: number) => [item.id, index])
+    );
+    this.eventSource = new EventSource(
+      DEV_BASE_API_URL + '/mailer/email-events'
+    );
+    this.eventSource.onopen = () => (this.loading.value = true);
+    this.eventSource.onmessage = this.handleEvent.bind(this);
+    this.onCompletePromise = new Promise<void>(resolve => {
+      this.resolveComplete = resolve;
+    });
+  }
+
+  // 等待所有邮件处理完成
+  onComplete() {
+    return this.onCompletePromise;
+  }
+
+  // 处理邮件事件
+  private handleEvent(event: MessageEvent) {
+    const data = JSON.parse(event.data);
+    const index = this.emailIndexMap.get(data.id);
+
+    if (data.status === 'success') {
+      this.emailProgress[index] = 100;
+      this.successfulIds.push(data.id);
+    }
+
+    if (data.type === '[DONE]') {
+      setTimeout(() => {
+        this.eventSource.close();
+        this.resolveComplete?.(undefined);
+      }, 2000);
+    }
+  }
+}
+
+// 处理确认操作
+async function handleConfirm() {
+  emailProgress.length = 0;
+  // 初始化邮件进度数组
+  selectedRows.value.forEach(() => emailProgress.push(0));
+
+  const mailerDto = selectedRows.value.map(row => ({
+    id: row.id,
+    email: row.email,
+    username: row.name,
+    isPassed: isPassed.value
+  }));
+
+  const emailEventProcessor = new EmailEventProcessor(
+    emailProgress,
+    mailerDto,
+    loading
+  );
+
+  // 获取面试结果
+  await fetchInterviewResults(mailerDto);
+  // 等待所有邮件处理完成
+  await emailEventProcessor.onComplete();
+
+  try {
+    await updateJoinStatus(
+      isPassed.value ? 1 : 2,
+      emailEventProcessor.successfulIds
+    );
+    await fetchJoinList();
+  } catch (error) {
+    showMessage('更新申请状态失败', 'error');
+  } finally {
+    loading.value = false;
+    showApproveDialog.value = false;
+  }
+}
 </script>
 
 <style scoped></style>
