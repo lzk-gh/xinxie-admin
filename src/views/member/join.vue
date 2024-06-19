@@ -114,17 +114,6 @@ interface SelectOptions {
   options: SelectOption[];
 }
 
-type EmailEventHandle = (data: {
-  emailProgress: number[];
-  successfulIds: number[];
-  eventSource: EventSource;
-  loading: any;
-  type: string;
-  emailIndexMap: Map<any, number>;
-  handleEvent(event: MessageEvent): void;
-  onComplete(handle?: EmailEventHandle): void;
-}) => void;
-
 const { showMessage } = useMessage();
 
 const isPassed = ref();
@@ -313,22 +302,16 @@ async function handleConfirm() {
   await emailEventProcessor.onComplete();
 
   try {
-
-    const updateJoinDtos = [
-      ...emailEventProcessor.successfulIds.map(id => {
-        const row = selectedRows.value.find(row => row.id === id);
-        return { id, status: row.email ? (isPassed.value ? 1 : 2) : 3 };
-      }),
+    const updateJoinDto = [
+      ...emailEventProcessor.successfulIds.map(id => ({
+        id,
+        status: isPassed.value ? 1 : 2
+      })),
       ...emailEventProcessor.failedIds.map(id => ({ id, status: 3 }))
     ];
 
-    // 一次性更新所有状态
-    await updateJoinStatus(updateJoinDtos);
-
-    // await updateJoinStatus(
-    //   isPassed.value ? 1 : 2,
-    //   emailEventProcessor.successfulIds
-    // );
+    // 更新所有状态
+    await updateJoinStatus(updateJoinDto);
     await fetchJoinList();
   } catch (error) {
     showMessage('更新申请状态失败', 'error');
