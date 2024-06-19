@@ -74,6 +74,18 @@ export const put: RequestFunction = (host: string, url: string, data?: any) => {
   });
 };
 
+export const patch: RequestFunction = (
+  host: string,
+  url: string,
+  data?: any
+) => {
+  return service({
+    url: host + url,
+    method: 'patch',
+    data: data
+  });
+};
+
 export const deleteRequest: RequestFunction = (host: string, url: string) => {
   return service({
     url: host + url,

@@ -1,5 +1,5 @@
 import { DEV_BASE_API_URL } from '@/config';
-import { post, get, put } from '@/utils/request.ts';
+import { post, get, patch } from '@/utils/request.ts';
 
 export const getAllJoinList = () => get(DEV_BASE_API_URL, '/join/list');
 
@@ -18,8 +18,5 @@ export const fetchInterviewResults = (
 ) => post(DEV_BASE_API_URL, '/mailer/inform', config);
 
 // 更新面试状态
-export const updateJoinStatus = (status: number, ids: number[]) =>
-  put(DEV_BASE_API_URL, '/join/update_status', {
-    status,
-    ids
-  });
+export const updateJoinStatus = (updateJoinDtos: any) =>
+  patch(DEV_BASE_API_URL, '/join/update_status', updateJoinDtos);

@@ -155,7 +155,8 @@ const selectOptions = reactive<SelectOptions[]>([
     options: [
       { label: '待处理', value: 0 },
       { label: '通过', value: 1 },
-      { label: '未通过', value: 2 }
+      { label: '未通过', value: 2 },
+      { label: '空邮箱', value: 3 }
     ]
   }
 ]);
@@ -163,7 +164,7 @@ const selectOptions = reactive<SelectOptions[]>([
 const searchDisposition = {
   label: '搜索姓名',
   placeholder: '请输入姓名'
-}
+};
 
 const getStatusLabel = status => {
   switch (status) {
@@ -173,6 +174,8 @@ const getStatusLabel = status => {
       return '已通过';
     case 2:
       return '未通过';
+    case 3:
+      return '空邮箱';
     default:
       return '未知状态';
   }
@@ -186,6 +189,8 @@ const getStatusTagType = status => {
       return 'success';
     case 2:
       return 'danger';
+    case 3:
+      return 'info';
   }
 };
 
@@ -231,6 +236,7 @@ function handleEmailSend(isPassedStatus: boolean) {
 
 class EmailEventProcessor {
   public successfulIds: number[] = [];
+  public failedIds: number[] = [];
   private eventSource: EventSource;
   private emailIndexMap: Map<any, number>;
   private readonly onCompletePromise: Promise<void>;
@@ -269,6 +275,10 @@ class EmailEventProcessor {
       this.successfulIds.push(data.id);
     }
 
+    if (data.status === 'error') {
+      this.failedIds.push(data.id);
+    }
+
     if (data.type === '[DONE]') {
       setTimeout(() => {
         this.eventSource.close();
@@ -303,10 +313,22 @@ async function handleConfirm() {
   await emailEventProcessor.onComplete();
 
   try {
-    await updateJoinStatus(
-      isPassed.value ? 1 : 2,
-      emailEventProcessor.successfulIds
-    );
+
+    const updateJoinDtos = [
+      ...emailEventProcessor.successfulIds.map(id => {
+        const row = selectedRows.value.find(row => row.id === id);
+        return { id, status: row.email ? (isPassed.value ? 1 : 2) : 3 };
+      }),
+      ...emailEventProcessor.failedIds.map(id => ({ id, status: 3 }))
+    ];
+
+    // 一次性更新所有状态
+    await updateJoinStatus(updateJoinDtos);
+
+    // await updateJoinStatus(
+    //   isPassed.value ? 1 : 2,
+    //   emailEventProcessor.successfulIds
+    // );
     await fetchJoinList();
   } catch (error) {
     showMessage('更新申请状态失败', 'error');
@@ -316,5 +338,3 @@ async function handleConfirm() {
   }
 }
 </script>
-
-<style scoped></style>
