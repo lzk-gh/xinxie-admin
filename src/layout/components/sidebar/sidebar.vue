@@ -5,15 +5,23 @@
       <span v-if="!collapseMenu" class="logo-text">ITA</span>
     </div>
     <el-menu
-        :collapse="collapseMenu"
-        default-active="2"
-        class="el-menu-vertical-demo"
-        :collapse-transition="false"
-        @select="selectMenu"
+      class="el-menu-vertical-demo"
+      :router="true"
+      :collapse-transition="false"
+      :collapse="collapseMenu"
+      :default-active="activeIndex"
     >
-      <el-sub-menu index="1">
+      <el-menu-item index="home">
+          <el-icon>
+            <i class="fi fi-sr-chart-line-up"></i>
+          </el-icon>
+          <span>首页</span>
+      </el-menu-item>
+      <el-sub-menu index="member">
         <template #title>
-          <el-icon><Edit /></el-icon>
+          <el-icon>
+            <i class="fi fi-ss-transporter"></i>
+          </el-icon>
           <span>成员管理</span>
         </template>
         <el-menu-item index="member_cadre">现任干部</el-menu-item>
@@ -21,7 +29,10 @@
       </el-sub-menu>
       <el-sub-menu index="2">
         <template #title>
-          <el-icon><Edit /></el-icon>
+          <el-icon>
+            <i class="fi fi-rr-productivity"></i>
+          </el-icon>
+
           <span>专用管理</span>
         </template>
         <el-menu-item index="specific_docs">文档管理</el-menu-item>
@@ -38,15 +49,18 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router'
-import { Edit, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
-const router = useRouter();
-const collapseMenu = ref(false);
+import { ref, watchEffect } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ArrowLeft, ArrowRight, Edit } from '@element-plus/icons-vue';
 
-function selectMenu(index) {
-  router.push('/' + index);
-}
+const router = useRouter();
+const route = useRoute();
+const collapseMenu = ref(false);
+const activeIndex = ref('home');
+
+watchEffect(() => {
+  activeIndex.value = route.path.slice(1) || 'home';
+});
 </script>
 <style lang="scss" scoped>
 .el-aside {

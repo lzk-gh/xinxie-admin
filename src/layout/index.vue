@@ -25,6 +25,7 @@ import Sidebar from '@/layout/components/sidebar/sidebar.vue';
 .main-content {
   height: calc(100vh - 60px);
   padding: 20px;
+  background-color: var(--theme-header-bg-color);
   overflow-y: scroll;
 }
 </style>
